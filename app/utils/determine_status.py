@@ -29,6 +29,8 @@ async def determine_verdict(words):
         words_split = word.split("-")
         for split_word in words_split:
             split_word = split_word.strip()
+            if split_word.isdigit():
+                continue
             status_list = await get_status(split_word, df)
             if status_list:
                 for status in status_list:

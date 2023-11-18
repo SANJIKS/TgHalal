@@ -16,7 +16,6 @@ def image_to_text(file_name: str):
     if texts:
         image_text = texts[0].description
         image_text = image_text.strip()
-        print(image_text)
         return image_text
     else:
         return False
