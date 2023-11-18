@@ -30,6 +30,7 @@ async def proccess_text(message: Message, state: FSMContext):
     if not clean_words:
         await message.answer('Не удалось найти пищевых составляющих.')
         await message.bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
+        return
 
 
     data = await state.get_data()
@@ -74,6 +75,7 @@ async def proccess_photo(message: Message, state: FSMContext):
     if not clean_words:
         await message.answer('Не удалось найти пищевых составляющих.')
         await message.bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
+        return
 
     data = await state.get_data()
     current_components = data.get('components', [])
@@ -104,7 +106,6 @@ async def handle_continue(callback: CallbackQuery, state: FSMContext):
 
     if verdict == "харам":
         haram_components = [word for word, status in words_with_status.items() if status.lower() == "харам"]
-        print(haram_components)
         haram_list = "\n".join(translate_to_russian(i) for i in haram_components)
         caption = f"Этот продукт нельзя употреблять, так как содержит следующие компоненты:\n{haram_list}"
     elif verdict == "халяль":

@@ -30,7 +30,6 @@ async def determine_verdict(words):
         for split_word in words_split:
             split_word = split_word.strip()
             status_list = await get_status(split_word, df)
-            print(status_list, '\n')
             if status_list:
                 for status in status_list:
                     statuses.append(status)
@@ -46,13 +45,11 @@ async def determine_verdict(words):
     else:
         final_verdict = 'халяль'
 
-    print(words_with_status)
     return [final_verdict, words_with_status]
 
 async def main():
     words = ['баранина', 'e120', 'свинина']
     result = await determine_verdict(words)
-    print(result)
 
 if __name__ == "__main__":
     asyncio.run(main())
