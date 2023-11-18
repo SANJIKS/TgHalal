@@ -1,0 +1,7 @@
+__pycache__/
+config.py
+venv/
+images/
+app/__pycache__/
+app/handlers/__pycache__/
+app/utils/__pycache__/
