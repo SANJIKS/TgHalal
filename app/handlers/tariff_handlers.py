@@ -1,5 +1,5 @@
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram import Router, F, Bot
+from aiogram.types import Message, CallbackQuery, LabeledPrice, PreCheckoutQuery, ContentType
 from aiogram.filters import CommandStart, Command
 
 from app.utils.tariffs import check_user_request, change_tariff_request
@@ -48,8 +48,53 @@ async def change_tariff(message: Message):
     await message.answer(f'Для изменения тарифа на {selected_tariff.replace("_", " ")} необходимо оплатить {tariff_price}.', reply_markup=markup)
 
 
+prices = {
+    'month': 25000,
+    'six-month': 120000,
+    'year': 200000
+}
+
+
 @router.callback_query(F.data.startswith('pay_'))
-async def process_payment_callback(callback: CallbackQuery):
-    selected_tariff = callback.data.replace('pay_', '').replace('_', ' ')
-    response = await change_tariff_request(callback.message.chat.id, selected_tariff)
-    await callback.message.answer(response)
+async def make_payment(callback: CallbackQuery):
+    tariff = callback.data.split('_')[1]
+
+    await callback.bot.send_invoice(
+        chat_id=callback.message.chat.id,
+        title='Обновление тарифа',
+        description='Принятие платежа',
+        provider_token='5420394252:TEST:543267',
+        payload=tariff,
+        currency='kgs',
+        prices=[
+            LabeledPrice(
+                label='Доступ к тарифу',
+                amount=int(prices[tariff])
+            )
+        ],
+        max_tip_amount=500,
+        suggested_tip_amounts=[100, 200, 300, 400],
+        start_parameter='start',
+        provider_data=None,
+        need_name=True,
+        need_phone_number=True,
+
+
+    )
+
+@router.pre_checkout_query()
+async def process_payment_callback(pre_checkout_query: PreCheckoutQuery, bot: Bot):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+    print(pre_checkout_query)
+    selected_tariff = pre_checkout_query.invoice_payload
+    chat_id = pre_checkout_query.from_user.id
+    print('\n\n\n\n',selected_tariff, chat_id)
+    response = await change_tariff_request(chat_id, selected_tariff)
+    await bot.send_message(chat_id, response)
+    print('\n\n\n\nPreCheckoutQuey\n\n\n\n')
+
+@router.message(F.successful_payment)
+async def successful_payment(message: Message):
+    print('AHAHAHAHAHh')
+    await message.answer('Тариф успешно сменён!')
+     
