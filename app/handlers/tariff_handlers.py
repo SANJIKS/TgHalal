@@ -63,7 +63,7 @@ async def make_payment(callback: CallbackQuery):
         chat_id=callback.message.chat.id,
         title='Обновление тарифа',
         description='Принятие платежа',
-        provider_token='5420394252:TEST:543267',
+        provider_token='5707748563:LIVE:552637',
         payload=tariff,
         currency='kgs',
         prices=[
@@ -85,16 +85,21 @@ async def make_payment(callback: CallbackQuery):
 @router.pre_checkout_query()
 async def process_payment_callback(pre_checkout_query: PreCheckoutQuery, bot: Bot):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
-    print(pre_checkout_query)
-    selected_tariff = pre_checkout_query.invoice_payload
-    chat_id = pre_checkout_query.from_user.id
-    print('\n\n\n\n',selected_tariff, chat_id)
-    response = await change_tariff_request(chat_id, selected_tariff)
-    await bot.send_message(chat_id, response)
-    print('\n\n\n\nPreCheckoutQuey\n\n\n\n')
+
+    # selected_tariff = pre_checkout_query.invoice_payload
+    # chat_id = pre_checkout_query.from_user.id
+
+    # response = await change_tariff_request(chat_id, selected_tariff)    
+    # await bot.send_message(chat_id, response)
 
 @router.message(F.successful_payment)
 async def successful_payment(message: Message):
-    print('AHAHAHAHAHh')
+    print('\n\n\nAHAHAHAHAHh')
+    
     await message.answer('Тариф успешно сменён!')
-     
+    selected_tariff = message.successful_payment.invoice_payload
+    
+    print('\n\n\n',message.successful_payment)
+
+    response = await change_tariff_request(message.chat.id, selected_tariff)
+    await message.answer(response)

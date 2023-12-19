@@ -5,3 +5,4 @@ images/
 app/__pycache__/
 app/handlers/__pycache__/
 app/utils/__pycache__/
+VisionAccessToken.json
