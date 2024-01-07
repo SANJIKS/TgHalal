@@ -131,7 +131,7 @@ async def handle_continue(callback: CallbackQuery, state: FSMContext):
         haram_list = "\n".join(translate_to_russian(i) for i in haram_components)
         forbidden_text = await get_lang_text(user_lang, 'forbidden')
 
-        caption = forbidden_text + '\n' + {haram_list}
+        caption = forbidden_text + '\n' + str(haram_list)
     elif verdict == "халяль":
         gpt_otvet = await gpt_response_halal()
         caption = f"Вердикт: {verdict.upper()}\n{gpt_otvet}"
