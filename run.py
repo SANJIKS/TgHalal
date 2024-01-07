@@ -12,10 +12,9 @@ async def main():
     bot = Bot(token=TOKEN)
     dp = Dispatcher()
     await set_commands(bot)
-    dp.include_router(lang_router)
     dp.include_router(router)
+    dp.include_router(lang_router)
     dp.include_router(main_router)
-    # dp.pre_checkout_query.register(process_payment_callback)
     await dp.start_polling(bot)
 
 
