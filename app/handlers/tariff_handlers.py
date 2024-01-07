@@ -123,28 +123,28 @@ async def make_payment(callback: CallbackQuery):
 
     await callback.message.answer_photo(photo, caption=caption)
 
-    await callback.bot.send_invoice(
-        chat_id=callback.message.chat.id,
-        title='Обновление тарифа',
-        description='Принятие платежа',
-        provider_token='5707748563:LIVE:552637',
-        payload=tariff,
-        currency='kgs',
-        prices=[
-            LabeledPrice(
-                label='Доступ к тарифу',
-                amount=int(prices[tariff])
-            )
-        ],
-        max_tip_amount=500,
-        suggested_tip_amounts=[100, 200, 300, 400],
-        start_parameter='start',
-        provider_data=None,
-        need_name=True,
-        need_phone_number=True,
+    # await callback.bot.send_invoice(
+    #     chat_id=callback.message.chat.id,
+    #     title='Обновление тарифа',
+    #     description='Принятие платежа',
+    #     provider_token='5707748563:LIVE:552637',
+    #     payload=tariff,
+    #     currency='kgs',
+    #     prices=[
+    #         LabeledPrice(
+    #             label='Доступ к тарифу',
+    #             amount=int(prices[tariff])
+    #         )
+    #     ],
+    #     max_tip_amount=500,
+    #     suggested_tip_amounts=[100, 200, 300, 400],
+    #     start_parameter='start',
+    #     provider_data=None,
+    #     need_name=True,
+    #     need_phone_number=True,
 
 
-    )
+    # )
 
 @router.pre_checkout_query()
 async def process_payment_callback(pre_checkout_query: PreCheckoutQuery, bot: Bot):
