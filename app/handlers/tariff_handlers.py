@@ -1,5 +1,5 @@
 from aiogram import Router, F, Bot
-from aiogram.types import Message, CallbackQuery, LabeledPrice, PreCheckoutQuery, ContentType
+from aiogram.types import Message, CallbackQuery, LabeledPrice, PreCheckoutQuery, ContentType, FSInputFile
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
@@ -64,10 +64,12 @@ async def handle_photo(message: Message, state: FSMContext):
         response = await tariffrequest(data, file_name)
         if response:
             await message.answer("Спасибо за предоставленное фото. Оплата тарифа проверяется.")
+            await state.set_state(SendCheck.finish)
         else:
             await message.answer('Повторите позже')
     else: 
         await message.answer("Пожалуйста, отправьте фото для подтверждения оплаты тарифа.")
+
 
 @router.message(Command('tariff'))
 async def select_tariff(message: Message):
@@ -114,9 +116,12 @@ prices = {
 async def make_payment(callback: CallbackQuery):
     tariff = callback.data.split('_')[1]
 
-    requisites = "Реквизиты:\nМБанк: 0 779 386 987\nО!Деньги: 0 500 386 986\nBeeline: 0 779 386 987\nMega Pay: 0 559 386 987\n\nНажмите на кнопку для оплаты картой через сам тг, в этом случае тариф сменится автоматически\nПри оплате через другие реквизиты, после оплаты впишите команду /send_check и отправьте фото чека, оператор проверит чек и сменит вам тариф."
+    photo = FSInputFile('app/status_imgs/requisites.png')
 
-    await callback.message.answer(requisites)
+
+    caption = "Нажмите на кнопку для оплаты картой через сам тг, в этом случае тариф сменится автоматически\nПри оплате через другие реквизиты, после оплаты впишите команду /send_check и отправьте фото чека, оператор проверит чек и сменит вам тариф."
+
+    await callback.message.answer_photo(photo, caption=caption)
 
     await callback.bot.send_invoice(
         chat_id=callback.message.chat.id,
