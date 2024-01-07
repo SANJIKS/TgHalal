@@ -102,7 +102,7 @@ async def proccess_photo(message: Message, state: FSMContext):
 
     product_composition_text = await get_lang_text(user_lang, 'found')
     product_composition1 = product_composition_text.split('_')[0]
-    product_composition2 = product_composition_text('_')[1]
+    product_composition2 = product_composition_text.split('_')[1]
 
     product_composition = product_composition1 + '\n'.join(current_components) + '\n' + product_composition2
 
