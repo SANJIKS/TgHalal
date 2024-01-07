@@ -112,6 +112,19 @@ async def get_user_lang(chat_id: int):
             else:
                 return False
             
+def parse_tariff_end(tariff_end_str):
+    formats = ["%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S.%f%z"]
+
+    for fmt in formats:
+        try:
+            tariff_end = datetime.strptime(tariff_end_str, fmt)
+            return tariff_end
+        except ValueError:
+            pass
+
+    # Если не удалось распознать ни один формат, можно бросить исключение или вернуть None
+    raise ValueError("Невозможно распознать формат времени")
+
 
 async def check_tariff_not_expired(chat_id):
     async with aiohttp.ClientSession() as session:
@@ -119,10 +132,13 @@ async def check_tariff_not_expired(chat_id):
             if response.status == 200:
                 data = await response.json()
                 if 'tariff' in data and 'tariff_end' in data:
-                    tariff_end = datetime.strptime(data['tariff_end'], '%Y-%m-%dT%H:%M:%S%z')
-
-                    now = datetime.now(timezone.utc)
-                    return tariff_end > now
+                    try:
+                        tariff_end = parse_tariff_end(data['tariff_end'])
+                        now = datetime.now(timezone.utc)
+                        return tariff_end > now
+                    except ValueError as e:
+                        print(f"Ошибка при обработке времени: {e}")
+                        return False
                 return False
     return False
 
