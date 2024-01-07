@@ -21,7 +21,7 @@ status_to_image = {
 @router.message(F.text)
 async def proccess_text(message: Message, state: FSMContext):
     check_tariff = await check_tariff_not_expired(message.chat.id)
-    user_lang = check_tariff['lang']
+    user_lang = await get_user_lang(message.chat.id)
     if not check_tariff:
         tariff_expired = await get_lang_text(user_lang, 'expired_tariff')
         await message.answer(tariff_expired)
@@ -59,7 +59,7 @@ async def proccess_text(message: Message, state: FSMContext):
 @router.message(F.photo)
 async def proccess_photo(message: Message, state: FSMContext):
     check_tariff = await check_tariff_not_expired(message.chat.id)
-    user_lang = check_tariff['lang']
+    user_lang = await get_user_lang(message.chat.id)
     if not check_tariff:
         tariff_expired = await get_lang_text(user_lang, 'expired_tariff')
         await message.answer(tariff_expired)
