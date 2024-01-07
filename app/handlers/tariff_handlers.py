@@ -119,8 +119,8 @@ async def make_payment(callback: CallbackQuery):
 
     photo = FSInputFile('app/status_imgs/requisites.png')
 
-    user_lang = get_user_lang(callback.message.chat.id)
-    caption = get_lang_text(user_lang, 'requisites')
+    user_lang = await get_user_lang(callback.message.chat.id)
+    caption = await get_lang_text(user_lang, 'requisites')
 
     # caption = "Нажмите на кнопку для оплаты картой через сам тг, в этом случае тариф сменится автоматически\nПри оплате через другие реквизиты, после оплаты впишите команду /send_check и отправьте фото чека, оператор проверит чек и сменит вам тариф."
 
