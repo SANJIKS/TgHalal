@@ -28,7 +28,6 @@ async def proccess_text(message: Message, state: FSMContext):
         return
     
     
-    user_lang = check_tariff['lang']
     
     processing_text = await get_lang_text(user_lang, 'processing')
     processing_msg = await message.answer(processing_text)
