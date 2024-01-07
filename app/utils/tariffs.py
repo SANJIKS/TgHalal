@@ -108,7 +108,8 @@ async def check_tariff_not_expired(chat_id):
             if response.status == 200:
                 data = await response.json()
                 if 'tariff' in data and 'tariff_end' in data:
-                    tariff_end = datetime.strptime(data['tariff_end'], '%Y-%m-%dT%H:%M:%S.%f%z')
+                    tariff_end = datetime.strptime(data['tariff_end'], '%Y-%m-%dT%H:%M:%S%z')
+
                     now = datetime.now(timezone.utc)
                     return tariff_end > now
                 return False
