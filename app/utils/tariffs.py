@@ -1,14 +1,27 @@
 from datetime import datetime, timezone
 from dateutil import tz, parser
 
+from sqlalchemy import select, delete, update, func, join
+from app.utils.models import Langs, async_session
+
 import aiohttp
 
 from config import API_URL
+
+
+async def get_lang_text(lang, text):
+    async with async_session() as session:
+        result = await session.execute(
+            select(getattr(Langs, text)).where(Langs.lang == lang)
+        )
+        return result.scalar()
+
 
 async def check_user_request(user_data: dict):
     async with aiohttp.ClientSession() as session:
         async with session.post(API_URL + 'api/telegram-users/', data=user_data) as response:
             data = await response.json()
+            lang = data['lang']
 
             if response.status == 200:
                 if 'tariff' in data and 'tariff_end' in data:
@@ -42,7 +55,8 @@ async def check_user_request(user_data: dict):
                         tariff_end = parser.parse(data['tariff_end'])
                         if tariff_end > now:
                             days_left = (tariff_end - now).days
-                            return f'Добро пожаловать в Halal Checker Bot! 🌿\nПожалуйста, загрузите фото состава пищевого продукта, чтобы узнать его статус.\nВаш текущий тариф - годовой. Осталось {days_left} дней.'
+                            # return f'Добро пожаловать в Halal Checker Bot! 🌿\nПожалуйста, загрузите фото состава пищевого продукта, чтобы узнать его статус.\nВаш текущий тариф - годовой. Осталось {days_left} дней.'
+                            return get_lang_text(lang, 'year_response')
                         else:
                             return 'Добро пожаловать в Halal Checker Bot! 🌿\nВаш тариф истёк. Пожалуйста, пополните тариф.\nБолее подробная информация о тарифах /tariff'
                 else:
