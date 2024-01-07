@@ -96,7 +96,7 @@ async def change_tariff_request(chat_id: int, tariff: str):
 
 async def change_lang_request(chat_id: int, lang: str):
     async with aiohttp.ClientSession() as session:
-        async with session.post(API_URL + f'api/telegram-users/{chat_id}/telegram_users_partial_update/', data={'lang': lang}) as response:
+        async with session.patch(API_URL + f'api/telegram-users/{chat_id}/telegram_users_partial_update/', data={'lang': lang}) as response:
             print(response.text)
             if response.status == 200:
                 return True
