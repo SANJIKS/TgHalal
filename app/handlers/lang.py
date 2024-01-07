@@ -17,6 +17,6 @@ async def change_language(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     response = await change_lang_request(chat_id, lang)
     if response:
-        callback.message.answer('Язык успешно сменён!')
+        await callback.message.answer('Язык успешно сменён!')
     else:
-        callback.message.answer('Произошла ошибка.')
+        await callback.message.answer('Произошла ошибка.')
