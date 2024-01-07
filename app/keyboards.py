@@ -26,7 +26,7 @@ kbd_lang = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(text='Русский', callback_data="lang_ru"),
-            InlineKeyboardButton(text='Английский', callback_data="lang_en"),
+            InlineKeyboardButton(text='Кыргызча', callback_data="lang_kg"),
         ]
     ]
 )
