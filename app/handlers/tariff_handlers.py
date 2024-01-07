@@ -3,7 +3,7 @@ from aiogram.types import Message, CallbackQuery, LabeledPrice, PreCheckoutQuery
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-from app.utils.tariffs import check_user_request, change_tariff_request, tariffrequest
+from app.utils.tariffs import check_user_request, change_tariff_request, get_lang_text, get_user_lang, tariffrequest
 from app.keyboards import tariffs, tariff_payment, tariffs_selection
 from app.states import SendCheck
 
@@ -101,8 +101,9 @@ async def change_tariff(message: Message):
         tariff_price = "Неизвестно"
 
     markup = tariff_payment(tariff_price, tariff)
+    selected_tariff = selected_tariff.replace("_", " ")
 
-    await message.answer(f'Для изменения тарифа на {selected_tariff.replace("_", " ")} необходимо оплатить {tariff_price}.', reply_markup=markup)
+    await message.answer(f'Для изменения тарифа {selected_tariff} необходимо оплатить {tariff_price}.', reply_markup=markup)
 
 
 prices = {
@@ -118,8 +119,10 @@ async def make_payment(callback: CallbackQuery):
 
     photo = FSInputFile('app/status_imgs/requisites.png')
 
+    user_lang = get_user_lang(callback.message.chat.id)
+    caption = get_lang_text(user_lang, 'requisites')
 
-    caption = "Нажмите на кнопку для оплаты картой через сам тг, в этом случае тариф сменится автоматически\nПри оплате через другие реквизиты, после оплаты впишите команду /send_check и отправьте фото чека, оператор проверит чек и сменит вам тариф."
+    # caption = "Нажмите на кнопку для оплаты картой через сам тг, в этом случае тариф сменится автоматически\nПри оплате через другие реквизиты, после оплаты впишите команду /send_check и отправьте фото чека, оператор проверит чек и сменит вам тариф."
 
     await callback.message.answer_photo(photo, caption=caption)
 

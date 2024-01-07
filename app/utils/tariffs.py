@@ -102,6 +102,17 @@ async def change_lang_request(chat_id: int, lang: str):
             else:
                 return False           
 
+
+async def get_user_lang(chat_id: int):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(API_URL + f'api/telegram-users/', data={'chat_id': str(chat_id)}) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data['lang']
+            else:
+                return False
+            
+
 async def check_tariff_not_expired(chat_id):
     async with aiohttp.ClientSession() as session:
         async with session.post(API_URL + 'api/telegram-users/', json={'chat_id': chat_id}) as response:
