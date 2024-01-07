@@ -25,19 +25,24 @@ async def cmd_start(message: Message):
 @router.message(Command('send_check'))
 async def send_check_command(message: Message, state: FSMContext):
     await state.set_state(SendCheck.what_tariff)
-    await message.answer('Какой тариф вы оплатили?', reply_markup=tariffs_selection)
+    user_lang = await get_user_lang(message.chat.id)
+    caption = await get_lang_text(user_lang, 'what_tariff')
+    await message.answer(caption, reply_markup=tariffs_selection)
 
 
 @router.message(SendCheck.what_tariff)
 async def get_tariff(message: Message, state: FSMContext):
     tariff = message.text
+    user_lang = await get_user_lang(message.chat.id)
     await state.update_data(tariff=tariff)
     await state.set_state(SendCheck.waiting_for_check)
-    await message.answer('Пожалуйста, отправьте фото чека для подтверждения оплаты.')
+    caption = await get_lang_text(user_lang, 'send_check_photo')
+    await message.answer(caption)
 
 
 @router.message(SendCheck.waiting_for_check)
 async def handle_photo(message: Message, state: FSMContext):
+    user_lang = await get_user_lang(message.chat.id)
     if message.photo:
         photo = message.photo[-1]
         file_info = await message.bot.get_file(photo.file_id)
@@ -63,29 +68,35 @@ async def handle_photo(message: Message, state: FSMContext):
 
         response = await tariffrequest(data, file_name)
         if response:
-            await message.answer("Спасибо за предоставленное фото. Оплата тарифа проверяется.")
+            caption = await get_lang_text(user_lang, 'success_check')
+            await message.answer(caption)
             await state.set_state(SendCheck.finish)
         else:
             await message.answer('Повторите позже')
-    else: 
-        await message.answer("Пожалуйста, отправьте фото для подтверждения оплаты тарифа.")
+    else:
+        caption = await get_lang_text(user_lang, 'please_send_photo')
+        await message.answer(caption)
 
 
 @router.message(Command('tariff'))
 async def select_tariff(message: Message):
-    tariff_info = 'Выберите тариф, чтобы начать использовать нашего бота, который может распознавать халяль и харам товары:\n\n1. Тариф на месяц:\n   - Стоимость: 250 сом\n   - Период: 30 дней\n\n2. Тариф на полгода:\n   - Стоимость: 1200 сом\n   - Период: 180 дней\n\n3. Тариф на год:\n   - Стоимость: 2000 сом\n   - Период: 365 дней\n\nДля оплаты выбранного тарифа, нажмите на соответствующую кнопку \"Оплатить\".'
+    user_lang = await get_user_lang(message.chat.id)
+    tariff_info = await get_lang_text(user_lang, 'tariff_list')
     await message.answer(tariff_info, reply_markup=tariffs)
 
 
 @router.message(Command('help'))
 async def get_help(message: Message):
-    await message.answer('В случае проблем напишите нам!\nТелеграм разработчика: @sanjiks\nТелеграм оператора: ...')
+    user_lang = await get_user_lang(message.chat.id)
+    text = await get_lang_text(user_lang, 'helping')
+    await message.answer(text)
 
 
 @router.message(F.text.startswith('На год'))
 @router.message(F.text.startswith('На полгода'))
 @router.message(F.text.startswith('На месяц'))
 async def change_tariff(message: Message):
+    user_lang = await get_user_lang(message.chat.id)
     selected_tariff = message.text.lower().replace(" ", "_")
 
     if selected_tariff == "на_месяц":
@@ -103,7 +114,11 @@ async def change_tariff(message: Message):
     markup = tariff_payment(tariff_price, tariff)
     selected_tariff = selected_tariff.replace("_", " ")
 
-    await message.answer(f'Для изменения тарифа {selected_tariff} необходимо оплатить {tariff_price}.', reply_markup=markup)
+    tap_to_pay = await get_lang_text(user_lang, 'for_change_tariff')
+    tap_to_pay = tap_to_pay.replace('{selected_tariff}', selected_tariff)
+    tap_to_pay = tap_to_pay.replace('{tariff_price}', tariff_price)
+
+    await message.answer(tap_to_pay, reply_markup=markup)
 
 
 prices = {

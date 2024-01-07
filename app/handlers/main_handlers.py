@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from app.utils.exctract_text import image_to_text
 from app.utils.google_translate import translate, translate_to_russian
 
-from app.utils.tariffs import check_tariff_not_expired
+from app.utils.tariffs import check_tariff_not_expired, get_lang_text, get_user_lang
 from app.utils.gpt import gpt_clear, gpt_response_halal
 from app.utils.determine_status import determine_verdict
 from app.keyboards import continue_markup
@@ -20,18 +20,25 @@ status_to_image = {
 
 @router.message(F.text)
 async def proccess_text(message: Message, state: FSMContext):
-    if not await check_tariff_not_expired(message.chat.id):
-        await message.answer('Ваш текущий тариф истёк. Для продолжения пользования нашими услугами, мы рекомендуем вам пополнить тариф.\nЧтобы узнать о доступных тарифах и их стоимости, введите команду /tariff.')
+    check_tariff = await check_tariff_not_expired(message.chat.id)
+    user_lang = check_tariff['lang']
+    if not check_tariff:
+        tariff_expired = await get_lang_text(user_lang, 'expired_tariff')
+        await message.answer(tariff_expired)
         return
     
-    processing_msg = await message.answer('Обработка текста...')
+    
+    user_lang = check_tariff['lang']
+    
+    processing_text = await get_lang_text(user_lang, 'processing')
+    processing_msg = await message.answer(processing_text)
 
     clean_words = await gpt_clear(message.text)
     if not clean_words:
-        await message.answer('Не удалось найти пищевых составляющих.')
+        not_found_text = await get_lang_text(user_lang, 'not_founds')
+        await message.answer(not_found_text)
         await message.bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
         return
-
 
     data = await state.get_data()
     current_components = data.get('components', [])
@@ -39,7 +46,11 @@ async def proccess_text(message: Message, state: FSMContext):
     current_components.extend(clean_words.strip().split(', '))
     await state.update_data(components=current_components)
 
-    product_composition = 'Найдены следующие компоненты продукта:\n' + '\n'.join(current_components) + '\n\nЕсли это не всё, пожалуйста, отправьте текстом или фото в более хорошем качестве.'
+    product_composition_text = await get_lang_text(user_lang, 'found')
+    product_composition1 = product_composition_text.split('_')[0]
+    product_composition2 = product_composition_text('_')[1]
+
+    product_composition = product_composition1 + '\n'.join(current_components) + '\n' + product_composition2
 
     await message.answer(product_composition, reply_markup=continue_markup)
     await message.bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
@@ -47,11 +58,16 @@ async def proccess_text(message: Message, state: FSMContext):
 
 @router.message(F.photo)
 async def proccess_photo(message: Message, state: FSMContext):
-    if not await check_tariff_not_expired(message.chat.id):
-        await message.answer('Ваш текущий тариф истёк. Для продолжения пользования нашими услугами, мы рекомендуем вам пополнить тариф.\nЧтобы узнать о доступных тарифах и их стоимости, введите команду /tariff.')
+    check_tariff = await check_tariff_not_expired(message.chat.id)
+    user_lang = check_tariff['lang']
+    if not check_tariff:
+        tariff_expired = await get_lang_text(user_lang, 'expired_tariff')
+        await message.answer(tariff_expired)
         return
     
-    processing_msg = await message.answer('Извлечение текста из изображения...')
+
+    processing_img_text = await get_lang_text(user_lang, 'image_processing')
+    processing_msg = await message.answer(processing_img_text)
 
     photo = message.photo[-1]
     file_info = await message.bot.get_file(photo.file_id)
@@ -64,16 +80,18 @@ async def proccess_photo(message: Message, state: FSMContext):
 
     await message.bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
 
-    
     if not text:
-        await message.answer('Не удалось распознать текст\nПопробуйте отправить текстом или переотправьте фото в более хорошем качестве')
+        not_recognized = await get_lang_text(user_lang, 'not_recognize')
+        await message.answer(not_recognized)
         return
     
-    processing_msg = await message.answer('Обработка текста...')
+    processing_text = await get_lang_text(user_lang, 'processing')
+    processing_msg = await message.answer(processing_text)
 
     clean_words = await gpt_clear(text)
     if not clean_words:
-        await message.answer('Не удалось найти пищевых составляющих.')
+        not_found_text = await get_lang_text(user_lang, 'not_founds')
+        await message.answer(not_found_text)
         await message.bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
         return
 
@@ -83,7 +101,11 @@ async def proccess_photo(message: Message, state: FSMContext):
     current_components.extend(clean_words.strip().split(', '))
     await state.update_data(components=current_components)
 
-    product_composition = 'Найдены следующие компоненты продукта:\n' + '\n'.join(current_components) + '\n\nЕсли это не всё, пожалуйста, отправьте текстом или фото в более хорошем качестве.'
+    product_composition_text = await get_lang_text(user_lang, 'found')
+    product_composition1 = product_composition_text.split('_')[0]
+    product_composition2 = product_composition_text('_')[1]
+
+    product_composition = product_composition1 + '\n'.join(current_components) + '\n' + product_composition2
 
     await message.answer(product_composition, reply_markup=continue_markup)
     await message.bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
@@ -93,6 +115,7 @@ async def proccess_photo(message: Message, state: FSMContext):
 
 @router.callback_query(F.data.startswith('continue'))
 async def handle_continue(callback: CallbackQuery, state: FSMContext):
+    user_lang = await get_user_lang(callback.message.chat.id)
     components = await state.get_data()
     translated_words = translate(','.join(components.get('components', [])))
     final_words = [char.strip().lower() for char in translated_words.split(',')]
@@ -107,12 +130,14 @@ async def handle_continue(callback: CallbackQuery, state: FSMContext):
     if verdict == "харам":
         haram_components = [word for word, status in words_with_status.items() if status.lower() == "харам"]
         haram_list = "\n".join(translate_to_russian(i) for i in haram_components)
-        caption = f"Этот продукт нельзя употреблять, так как содержит следующие компоненты:\n{haram_list}"
+        forbidden_text = await get_lang_text(user_lang, 'forbidden')
+
+        caption = forbidden_text + '\n' + {haram_list}
     elif verdict == "халяль":
         gpt_otvet = await gpt_response_halal()
         caption = f"Вердикт: {verdict.upper()}\n{gpt_otvet}"
     else:
-        caption = "Точно определить статус продукта не удалось\nПосмотрите на этикетке наличие на Халал сертификата"
+        caption = await get_lang_text(user_lang, 'unknown')
 
     image_file_path = status_to_image[verdict]
     photo = FSInputFile(image_file_path)
