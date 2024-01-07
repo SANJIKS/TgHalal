@@ -1,9 +1,11 @@
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, LabeledPrice, PreCheckoutQuery, ContentType
 from aiogram.filters import CommandStart, Command
+from aiogram.fsm.context import FSMContext
 
-from app.utils.tariffs import check_user_request, change_tariff_request
-from app.keyboards import tariffs, tariff_payment
+from app.utils.tariffs import check_user_request, change_tariff_request, tariffrequest
+from app.keyboards import tariffs, tariff_payment, tariffs_selection
+from app.states import SendCheck
 
 
 router = Router()
@@ -19,10 +21,63 @@ async def cmd_start(message: Message):
     response = await check_user_request(user_data)
     await message.answer(response)
 
+
+@router.message(Command('send_check'))
+async def send_check_command(message: Message, state: FSMContext):
+    await state.set_state(SendCheck.what_tariff)
+    await message.answer('Какой тариф вы оплатили?', reply_markup=tariffs_selection)
+
+
+@router.message(SendCheck.what_tariff)
+async def get_tariff(message: Message, state: FSMContext):
+    tariff = message.text
+    await state.update_data(tariff=tariff)
+    await state.set_state(SendCheck.waiting_for_check)
+    await message.answer('Пожалуйста, отправьте фото чека для подтверждения оплаты.')
+
+
+@router.message(SendCheck.waiting_for_check)
+async def handle_photo(message: Message, state: FSMContext):
+    if message.photo:
+        photo = message.photo[-1]
+        file_info = await message.bot.get_file(photo.file_id)
+        downloaded_file = await message.bot.download_file(file_info.file_path)
+        file_name = f"images/photo_{message.date}.jpg"
+        
+        with open(file_name, 'wb') as new_file:
+            new_file.write(downloaded_file.read())
+
+
+        # Получаем сохраненные данные из состояния
+        data = await state.get_data()
+        tariff = data.get("tariff")
+        username = message.from_user.username
+        chat_id = message.chat.id
+
+
+        data = {
+            'username': username,
+            'tariff': tariff,
+            'chat_id': chat_id,
+        }
+
+        response = await tariffrequest(data, file_name)
+        if response:
+            await message.answer("Спасибо за предоставленное фото. Оплата тарифа проверяется.")
+        else:
+            await message.answer('Повторите позже')
+    else: 
+        await message.answer("Пожалуйста, отправьте фото для подтверждения оплаты тарифа.")
+
 @router.message(Command('tariff'))
 async def select_tariff(message: Message):
     tariff_info = 'Выберите тариф, чтобы начать использовать нашего бота, который может распознавать халяль и харам товары:\n\n1. Тариф на месяц:\n   - Стоимость: 250 сом\n   - Период: 30 дней\n\n2. Тариф на полгода:\n   - Стоимость: 1200 сом\n   - Период: 180 дней\n\n3. Тариф на год:\n   - Стоимость: 2000 сом\n   - Период: 365 дней\n\nДля оплаты выбранного тарифа, нажмите на соответствующую кнопку \"Оплатить\".'
     await message.answer(tariff_info, reply_markup=tariffs)
+
+
+@router.message(Command('help'))
+async def get_help(message: Message):
+    await message.answer('В случае проблем напишите нам!\nТелеграм разработчика: @sanjiks\nТелеграм оператора: ...')
 
 
 @router.message(F.text.startswith('На год'))
@@ -59,6 +114,10 @@ prices = {
 async def make_payment(callback: CallbackQuery):
     tariff = callback.data.split('_')[1]
 
+    requisites = "Реквизиты:\nМБанк: 0 779 386 987\nО!Деньги: 0 500 386 986\nBeeline: 0 779 386 987\nMega Pay: 0 559 386 987\n\nНажмите на кнопку для оплаты картой через сам тг, в этом случае тариф сменится автоматически\nПри оплате через другие реквизиты, после оплаты впишите команду /send_check и отправьте фото чека, оператор проверит чек и сменит вам тариф."
+
+    await callback.message.answer(requisites)
+
     await callback.bot.send_invoice(
         chat_id=callback.message.chat.id,
         title='Обновление тарифа',
@@ -86,20 +145,11 @@ async def make_payment(callback: CallbackQuery):
 async def process_payment_callback(pre_checkout_query: PreCheckoutQuery, bot: Bot):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
-    # selected_tariff = pre_checkout_query.invoice_payload
-    # chat_id = pre_checkout_query.from_user.id
-
-    # response = await change_tariff_request(chat_id, selected_tariff)    
-    # await bot.send_message(chat_id, response)
 
 @router.message(F.successful_payment)
-async def successful_payment(message: Message):
-    print('\n\n\nAHAHAHAHAHh')
-    
+async def successful_payment(message: Message):    
     await message.answer('Тариф успешно сменён!')
     selected_tariff = message.successful_payment.invoice_payload
-    
-    print('\n\n\n',message.successful_payment)
 
     response = await change_tariff_request(message.chat.id, selected_tariff)
     await message.answer(response)

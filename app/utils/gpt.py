@@ -17,7 +17,7 @@ async def gpt_clear(english_words):
         async with session.post(
             "https://api.openai.com/v1/chat/completions",
             json={
-                "model": "gpt-4",
+                "model": "gpt-4-1106-preview",
                 "messages": chat_history,
                 "temperature": 0.2
             },
@@ -49,7 +49,7 @@ async def gpt_response_halal():
         async with session.post(
             "https://api.openai.com/v1/chat/completions",
             json={
-                "model": "gpt-4",
+                "model": "gpt-4-1106-preview",
                 "messages": gpt_prompt,
                 "temperature": 0.4
             },

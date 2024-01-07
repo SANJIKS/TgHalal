@@ -71,3 +71,23 @@ async def check_tariff_not_expired(chat_id):
                     return tariff_end > now
                 return False
     return False
+
+
+async def tariffrequest(data, file_name):
+    with open(file_name, 'rb') as photo_file:
+        photo_bytes = photo_file.read()
+
+    form_data = aiohttp.FormData()
+    form_data.add_field('image', photo_bytes, filename='image.jpg', content_type='image/jpeg')
+
+    for key, value in data.items():
+        form_data.add_field(key, str(value))
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(API_URL + 'api/tariff-requests/', data=form_data) as response:
+            if response.status == 201:
+                return True
+            else:
+                print(response.status)
+                print(response.text)
+                return False
