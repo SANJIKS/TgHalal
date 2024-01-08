@@ -24,6 +24,9 @@ async def check_user_request(user_data: dict):
             lang = data['lang']
 
             if response.status == 200:
+                if 'new' in data and data['new']:
+                    return 'new user'
+                
                 if 'tariff' in data and 'tariff_end' in data:
                     now = datetime.now(tz=tz.gettz('UTC'))
 

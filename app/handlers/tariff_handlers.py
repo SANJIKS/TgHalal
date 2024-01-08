@@ -4,7 +4,7 @@ from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
 from app.utils.tariffs import check_user_request, change_tariff_request, get_lang_text, get_user_lang, tariffrequest
-from app.keyboards import tariffs, tariff_payment, tariffs_selection
+from app.keyboards import tariffs, tariff_payment, tariffs_selection, kbd_lang
 from app.states import SendCheck
 
 
@@ -19,6 +19,9 @@ async def cmd_start(message: Message):
         'username': message.from_user.username,
     }
     response = await check_user_request(user_data)
+    if response == 'new user':
+        await message.answer("Установить язык", reply_markup=kbd_lang)
+        
     await message.answer(response)
 
 
