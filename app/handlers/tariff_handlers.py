@@ -104,10 +104,10 @@ async def change_tariff(message: Message):
 
     if selected_tariff == "на_месяц":
         tariff = 'month'
-        tariff_price = "250 сом"
+        tariff_price = "200 сом"
     elif selected_tariff == "на_полгода":
         tariff = 'six-month'
-        tariff_price = "1200 сом"
+        tariff_price = "1000 сом"
     elif selected_tariff == "на_год":
         tariff = 'year'
         tariff_price = "2000 сом"
@@ -125,8 +125,8 @@ async def change_tariff(message: Message):
 
 
 prices = {
-    'month': 25000,
-    'six-month': 120000,
+    'month': 20000,
+    'six-month': 100000,
     'year': 200000
 }
 
