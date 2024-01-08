@@ -136,7 +136,7 @@ async def check_tariff_not_expired(chat_id):
             if response.status == 200:
                 data = await response.json()
                 if 'tariff' in data and 'tariff_end' in data:
-                    if data['tariff'] == 'daily' and data['requests'] >= 5:
+                    if data['tariff'] == 'daily' and data['requests'] >= 10:
                         return False
                     
                     try:
