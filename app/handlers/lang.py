@@ -2,6 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from app.utils.tariffs import change_lang_request
+from app.handlers.tariff_handlers import cmd_start
 
 from app.keyboards import kbd_lang
 
@@ -18,5 +19,6 @@ async def change_language(callback: CallbackQuery):
     response = await change_lang_request(chat_id, lang)
     if response:
         await callback.message.answer('Язык успешно сменён!')
+        await cmd_start(callback.message)
     else:
         await callback.message.answer('Произошла ошибка.')
