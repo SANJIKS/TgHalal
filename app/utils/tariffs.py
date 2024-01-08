@@ -32,7 +32,8 @@ async def check_user_request(user_data: dict):
 
                     if data['tariff'] == 'daily':
                         tariff_end = parser.parse(data['tariff_end'])
-                        if tariff_end > now:
+                        if data['requests'] < 10:
+                        # if tariff_end > now:
                             days_left = (tariff_end - now).days
                             # return f'Добро пожаловать в Halal Checker Bot! 🌿\nПожалуйста, загрузите фото состава пищевого продукта, чтобы узнать его статус.\nВаш текущий тариф - пробный. Осталось {days_left} дней.'
                             result_template = await get_lang_text(lang, 'daily_response')
@@ -40,7 +41,7 @@ async def check_user_request(user_data: dict):
                             return result
                         else:
                             # return 'Добро пожаловать в Halal Checker Bot! 🌿\nВаш пробный период истёк. Пожалуйста, пополните тариф.\nБолее подробная информация о тарифах /tariff'
-                            result = await get_lang_text(lang, 'expired_response')
+                            result = await get_lang_text(lang, 'expired_month_response')
                             return result
 
                     elif data['tariff'] == 'month':
@@ -161,6 +162,15 @@ async def tariffrequest(data, file_name):
             if response.status == 201:
                 return True
             else:
-                print(response.status)
-                print(response.text)
+                # print(response.status)
+                # print(response.text)
+                return False
+            
+
+async def increase_user_requests(chat_id):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(API_URL + f'api/telegram-users/{chat_id}/increase_requests/') as response:
+            if response.status == 200:
+                return True
+            else:
                 return False

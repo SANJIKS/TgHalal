@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from app.utils.exctract_text import image_to_text
 from app.utils.google_translate import translate, translate_to_russian
 
-from app.utils.tariffs import check_tariff_not_expired, get_lang_text, get_user_lang
+from app.utils.tariffs import check_tariff_not_expired, get_lang_text, get_user_lang, increase_user_requests
 from app.utils.gpt import gpt_clear, gpt_response_halal
 from app.utils.determine_status import determine_verdict
 from app.keyboards import continue_markup
@@ -142,4 +142,5 @@ async def handle_continue(callback: CallbackQuery, state: FSMContext):
     photo = FSInputFile(image_file_path)
 
     await callback.message.answer_photo(photo, caption=caption)
+    await increase_user_requests(callback.message.chat.id)
 
