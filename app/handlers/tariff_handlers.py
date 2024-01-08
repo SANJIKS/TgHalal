@@ -20,9 +20,9 @@ async def cmd_start(message: Message):
     }
     response = await check_user_request(user_data)
     if response == 'new user':
-        await message.answer("Установить язык", reply_markup=kbd_lang)
-        
-    await message.answer(response)
+        await message.answer("Выберите язык: ", reply_markup=kbd_lang)
+    else:
+        await message.answer(response)
 
 
 @router.message(Command('send_check'))
