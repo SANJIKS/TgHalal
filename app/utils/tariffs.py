@@ -41,7 +41,7 @@ async def check_user_request(user_data: dict):
                             return result
                         else:
                             # return 'Добро пожаловать в Halal Checker Bot! 🌿\nВаш пробный период истёк. Пожалуйста, пополните тариф.\nБолее подробная информация о тарифах /tariff'
-                            result = await get_lang_text(lang, 'expired_month_response')
+                            result = await get_lang_text(lang, 'expired_daily_response')
                             return result
 
                     elif data['tariff'] == 'month':
